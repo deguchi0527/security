@@ -7,6 +7,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -23,13 +24,35 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     // アクセス権限の設定
     http.authorizeRequests()
         // 制限なし
-        .antMatchers("/").permitAll()
+        .antMatchers("/", "/login*", "/logout").permitAll()
         // '/admin'は、'ADMIN'ロールのみアクセス可
         .antMatchers("/admin").hasRole("ADMIN")
         // 他は制限あり
         .anyRequest().authenticated();
     // ログイン処理の設定
-    http.formLogin();
+    http.formLogin()
+        // ログイン処理のURL
+        .loginPage("/login")
+        // usernameのパラメータ名
+        .usernameParameter("user")
+        // passwordのパラメータ名
+        .passwordParameter("password")
+        // ログイン失敗時の遷移先URL
+        .failureForwardUrl("/login-error");
+    // 許可証
+    // .permitAll();
+    // ログアウト処理の設定
+    http.logout()
+        // ログアウト処理のURL
+        .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+        // ログアウト成功時の遷移先URL
+        .logoutSuccessUrl("/login")
+        // ログアウト時に削除するクッキー名
+        .deleteCookies("JSESSIONID")
+        // ログアウト時のセッション破棄を有効化
+        .invalidateHttpSession(true);
+    // 許可証
+    // .permitAll();
   }
 
   @Override
